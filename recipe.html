@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#273d3a"><title>RECIPE BOOK · LIFE BOOK</title>
+<style>
+:root{--bg:#f6f7f5;--white:#fff;--ink:#23312e;--muted:#76817d;--line:#e1e7e2;--accent:#314e45}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}.wrap{max-width:820px;margin:auto;padding:27px 16px 70px}header,.heading,.toolbar,.buttons{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:.13em;color:var(--muted);font-weight:750}.brand{font-size:28px;font-weight:900;letter-spacing:.045em;margin:3px 0}.status{font-size:12px;color:var(--muted)}.btn{border:1px solid var(--line);background:white;color:var(--ink);padding:10px 13px;border-radius:11px;font-weight:700}.btn.primary{background:var(--accent);border-color:var(--accent);color:white}.btn.danger{color:#ad3939}.intro{background:var(--accent);color:white;border-radius:18px;padding:24px;margin:22px 0 26px}.intro h1{font-size:23px;margin:0 0 9px}.intro p{color:#d6e2dc;line-height:1.6;margin:0;font-size:13px}.heading{margin-bottom:13px}.heading h2{margin:0;font-size:19px}.toolbar{margin:0 0 14px}.search{width:100%;border:1px solid var(--line);border-radius:12px;background:white;padding:13px 14px;outline:none}.list{display:grid;gap:10px}.item{border:1px solid var(--line);border-radius:14px;background:white;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:14px}.item h3{font-size:17px;margin:0 0 6px}.item p{font-size:13px;color:var(--muted);margin:0;line-height:1.5;white-space:pre-line}.empty{text-align:center;background:white;border:1px dashed var(--line);border-radius:14px;padding:45px 10px;color:var(--muted)}.note{font-size:12px;color:var(--muted);line-height:1.7;margin-top:22px}.modal{display:none;position:fixed;inset:0;background:#17231ecc;z-index:20;align-items:center;justify-content:center;padding:12px}.modal.show{display:flex}.dialog{width:min(100%,660px);max-height:95dvh;overflow:auto;background:white;border-radius:17px;padding:20px}.section{margin:17px 0}.section label{font-size:13px;font-weight:800;display:block;margin:0 0 7px}.section input,.section textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;outline:none}.section textarea{resize:vertical;min-height:112px;line-height:1.6}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.view pre{white-space:pre-wrap;word-wrap:break-word;font:inherit;line-height:1.75;margin:8px 0 20px}.view h3{font-size:15px;margin:19px 0 0}.meta{font-size:13px;color:var(--muted)}.viewname{font-size:23px;margin:4px 0 8px}.hidden{display:none}@media(max-width:480px){.brand{font-size:23px}.btn{padding:9px 11px}.dialog{padding:15px}.pair{grid-template-columns:1fr 1fr}.intro{padding:20px}}
+</style><script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script></head><body><main class="wrap">
+<header><div><div class="eyebrow">LIFE BOOK / MY KITCHEN</div><div class="brand">RECIPE BOOK</div></div><div class="buttons"><button class="btn" id="backup">백업</button><button class="btn" id="restore">복원</button><input id="file" type="file" accept="application/json,.json" hidden></div></header>
+<section class="cloudbox" style="background:#fff;border:1px solid #e1e7e2;border-radius:14px;padding:16px;margin-top:18px"><strong>☁ 레시피 클라우드 동기화</strong><div class="buttons" style="margin-top:10px"><input id="email" type="email" placeholder="이메일" autocomplete="email" style="min-width:155px;flex:1;padding:10px;border:1px solid #e1e7e2;border-radius:10px"><input id="password" type="password" placeholder="비밀번호" autocomplete="current-password" style="min-width:130px;flex:1;padding:10px;border:1px solid #e1e7e2;border-radius:10px"><button class="btn primary" id="login">로그인</button><button class="btn" id="logout" hidden>로그아웃</button><button class="btn" id="refresh">동기화</button></div><p class="note" id="cloudStatus" style="margin:8px 0 0">클라우드 연결 준비 중 · 로그인하면 기기 간 동기화됩니다.</p></section><section class="intro"><h1>나만의 레시피 기록</h1><p>필요한 재료와 만드는 방법을 간단하게 정리하세요.<br>레시피는 이 기기에 자동 저장되고, 로그인하면 클라우드에도 동기화됩니다.</p></section>
+<div class="heading"><h2>내 레시피 <span id="count" class="meta"></span></h2><button class="btn primary" id="new">+ 레시피 추가</button></div><div class="toolbar"><input class="search" id="search" placeholder="요리 이름, 재료, 조리 순서 검색" aria-label="레시피 검색"></div><div id="list" class="list"></div><p class="note" id="status">기기 내 자동저장 · 클라우드 로그인 후 PC와 아이폰 사이 동기화됩니다.</p>
+</main>
+<div class="modal" id="editor" role="dialog" aria-modal="true" aria-label="레시피 편집"><div class="dialog"><div class="heading"><h2 id="editTitle">레시피 추가</h2><button class="btn" id="closeEdit">닫기</button></div><form id="form"><div class="section"><label for="name">요리 이름 *</label><input id="name" maxlength="120" required placeholder="예: 부드러운 계란찜"></div><div class="pair"><div class="section"><label for="minutes">조리 시간 (분)</label><input id="minutes" type="number" min="0" max="9999" placeholder="20"></div><div class="section"><label for="servings">인분</label><input id="servings" type="number" min="1" max="100" placeholder="2"></div></div><div class="section"><label for="ingredients">재료 *</label><textarea id="ingredients" required placeholder="계란 3개&#10;우유 100ml&#10;소금 약간"></textarea></div><div class="section"><label for="steps">조리 순서 *</label><textarea id="steps" required rows="6" placeholder="계란을 풀어준다.&#10;우유와 소금을 넣는다.&#10;약불에서 익힌다."></textarea></div><div class="section"><label for="memo">요리 팁 · 메모 (선택)</label><textarea id="memo" placeholder="다음에 만들 때 기억할 점"></textarea></div><div class="buttons"><button class="btn primary" type="submit">저장하기</button><button class="btn" type="button" id="cancel">취소</button></div></form></div></div>
+<div class="modal" id="viewer" role="dialog" aria-modal="true" aria-label="레시피 내용"><div class="dialog view"><div class="heading"><div><div class="eyebrow">RECIPE</div><h2 class="viewname" id="viewName"></h2><div class="meta" id="viewMeta"></div></div><button class="btn" id="closeView">닫기</button></div><h3>재료</h3><pre id="viewIngredients"></pre><h3>조리 순서</h3><pre id="viewSteps"></pre><div id="memoWrap"><h3>메모</h3><pre id="viewMemo"></pre></div><div class="buttons"><button class="btn primary" id="viewEdit">수정</button><button class="btn danger" id="viewDelete">삭제</button></div></div></div>
+<script>
+(()=>{'use strict';
+const KEY='wooni-recipe-book-v1', $=id=>document.getElementById(id);
+let recipes=[],editing=null,viewing=null;
+let deleted={},client=null,user=null,syncTimer=null,syncBusy=false,syncAgain=false;const DELETE_KEY=KEY+'-deleted';
+const CLOUD_URL='https://qtcrdendghrulbpwtppu.supabase.co',CLOUD_KEY='sb_publishable_zikwIFtPfYLzxoY-Ej7m0g_-Xs_x8ys';
+const uid=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function load(){try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');recipes=Array.isArray(a)?a:[];deleted=JSON.parse(localStorage.getItem(DELETE_KEY)||'{}')||{}}catch{recipes=[];showStatus('저장된 데이터 읽기 실패. 백업 파일을 확인해 주세요.')}}
+function showStatus(message){$('status').textContent=message}
+function persist(){try{const s=JSON.stringify(recipes);localStorage.setItem(KEY,s);if(localStorage.getItem(KEY)!==s)throw Error('failed');localStorage.setItem(DELETE_KEY,JSON.stringify(deleted));showStatus(user?'✓ 기기에 저장됨 · 클라우드 동기화 중':'✓ 기기에 저장됨 · 로그인하면 클라우드에도 저장됩니다.');scheduleSync();return true}catch{showStatus('⚠ 저장 실패 · 백업을 확인해 주세요.');return false}}
+function render(){const q=$('search').value.trim().toLowerCase();const shown=recipes.filter(r=>[r.name,r.ingredients,r.steps,r.memo].some(x=>String(x||'').toLowerCase().includes(q))).sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));$('count').textContent=recipes.length+'개';$('list').innerHTML=shown.map(r=>`<div class="item"><div><h3>${esc(r.name)}</h3><p>${esc(String(r.ingredients||'').split('\n').slice(0,2).join(' · '))}</p></div><button class="btn primary" data-open="${esc(r.id)}">보기</button></div>`).join('')||'<div class="empty">레시피가 없습니다.<br>새 레시피를 추가해 보세요.</div>'}
+function openEdit(id){const r=recipes.find(x=>x.id===id);editing=r?.id||null;$('editTitle').textContent=r?'레시피 수정':'레시피 추가';for(const k of ['name','minutes','servings','ingredients','steps','memo'])$(k).value=r?.[k]??'';$('viewer').classList.remove('show');$('editor').classList.add('show')}
+function closeEdit(){$('editor').classList.remove('show');editing=null}
+function openView(id){const r=recipes.find(x=>x.id===id);if(!r)return;viewing=id;$('viewName').textContent=r.name;$('viewMeta').textContent=[r.minutes?`${r.minutes}분`:null,r.servings?`${r.servings}인분`:null].filter(Boolean).join(' · ');$('viewIngredients').textContent=r.ingredients||'';$('viewSteps').textContent=String(r.steps||'').split('\n').filter(s=>s.trim()).map((s,i)=>`${i+1}. ${s}`).join('\n');$('viewMemo').textContent=r.memo||'';$('memoWrap').classList.toggle('hidden',!r.memo);$('viewer').classList.add('show')}
+function closeView(){$('viewer').classList.remove('show');viewing=null}
+$('new').onclick=()=>openEdit(null);$('closeEdit').onclick=$('cancel').onclick=closeEdit;$('closeView').onclick=closeView;$('search').oninput=render;$('list').onclick=e=>{const el=e.target.closest('[data-open]');if(el)openView(el.dataset.open)};
+$('form').onsubmit=e=>{e.preventDefault();const obj={name:$('name').value.trim(),minutes:$('minutes').value?Number($('minutes').value):null,servings:$('servings').value?Number($('servings').value):null,ingredients:$('ingredients').value.trim(),steps:$('steps').value.trim(),memo:$('memo').value.trim()};if(!obj.name||!obj.ingredients||!obj.steps)return;const old=recipes.find(x=>x.id===editing);const previous=JSON.stringify(recipes);if(old)Object.assign(old,obj,{updatedAt:new Date().toISOString()});else recipes.push({...obj,id:uid(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});if(!persist()){recipes=JSON.parse(previous);alert('저장에 실패했습니다.');return}closeEdit();render()};
+$('viewEdit').onclick=()=>openEdit(viewing);$('viewDelete').onclick=()=>{if(!confirm('이 레시피를 삭제할까요?'))return;const prev=recipes;recipes=recipes.filter(r=>r.id!==viewing);deleted[viewing]=new Date().toISOString();if(!persist()){recipes=prev;alert('삭제를 저장하지 못했습니다.');return}closeView();render()};
+$('backup').onclick=()=>{const blob=new Blob([JSON.stringify({format:KEY,exportedAt:new Date().toISOString(),recipes},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='recipe-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000)};
+$('restore').onclick=()=>$('file').click();$('file').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const v=JSON.parse(await file.text());if(!Array.isArray(v.recipes))throw Error('format');if(!confirm('백업 레시피를 현재 기록에 합칠까요? 기존 레시피는 유지됩니다.'))return;const previous=recipes.slice(),ids=new Set(recipes.map(r=>String(r.id)));let count=0;for(const item of v.recipes){if(item?.id&&typeof item.name==='string'&&typeof item.ingredients==='string'&&typeof item.steps==='string'&&!ids.has(String(item.id))){recipes.push(item);ids.add(String(item.id));count++}}if(!persist()){recipes=previous;throw Error('storage')}render();alert(count+'개의 레시피를 가져왔습니다.')}catch{alert('백업 파일을 불러오지 못했습니다.')}finally{e.target.value=''}};
+for(const id of ['editor','viewer'])$(id).addEventListener('click',e=>{if(e.target===$(id))id==='editor'?closeEdit():closeView()});
+
+function cloudSay(s){$('cloudStatus').textContent=s}
+function scheduleSync(){if(!user)return;clearTimeout(syncTimer);syncTimer=setTimeout(syncCloud,650)}
+async function syncCloud(){
+ if(!user||!client)return;
+ if(syncBusy){syncAgain=true;return}
+ syncBusy=true;const userId=user.id;
+ try{
+  cloudSay('☁ 클라우드 동기화 중…');
+  const {data,error}=await client.from('recipe_entries').select('id,data,updated_at,deleted').eq('user_id',userId);
+  if(error)throw error;
+  if(!user||user.id!==userId)return;
+  const remote=new Map((data||[]).map(x=>[x.id,x]));
+  const local=new Map(recipes.map(x=>[String(x.id),x]));
+  const mutations=[];
+  for(const row of data||[]){
+   const localDeleted=deleted[row.id];const localRecipe=local.get(row.id);
+   const remoteTime=Date.parse(row.updated_at)||0;
+   const localTime=Math.max(Date.parse(localRecipe?.updatedAt)||0,Date.parse(localDeleted)||0);
+   if(localTime>remoteTime){
+    if(localDeleted&&Date.parse(localDeleted)>=Date.parse(localRecipe?.updatedAt||0))mutations.push({user_id:userId,id:row.id,data:{},deleted:true,updated_at:localDeleted});
+    else if(localRecipe)mutations.push({user_id:userId,id:row.id,data:localRecipe,deleted:false,updated_at:localRecipe.updatedAt||new Date().toISOString()});
+   }else if(row.deleted){local.delete(row.id);deleted[row.id]=row.updated_at}
+   else if(row.data&&typeof row.data.name==='string'){local.set(row.id,{...row.data,id:row.id});delete deleted[row.id]}
+  }
+  for(const [id,r] of local){if(!remote.has(id)&&(!deleted[id]||Date.parse(r.updatedAt)>Date.parse(deleted[id])))mutations.push({user_id:userId,id,data:r,deleted:false,updated_at:r.updatedAt||new Date().toISOString()})}
+  for(const [id,date] of Object.entries(deleted)){if(!remote.has(id))mutations.push({user_id:userId,id,data:{},deleted:true,updated_at:date})}
+  if(mutations.length){const {error:pushError}=await client.from('recipe_entries').upsert(mutations,{onConflict:'user_id,id'});if(pushError)throw pushError}
+  // Re-read the final cloud state so older device data cannot silently replace newer records.
+  const {data:finalRows,error:finalError}=await client.from('recipe_entries').select('id,data,updated_at,deleted').eq('user_id',userId);
+  if(finalError)throw finalError;
+  if(!user||user.id!==userId)return;
+  const last=new Map();const tomb={};
+  for(const r of finalRows||[]){if(r.deleted)tomb[r.id]=r.updated_at;else if(r.data&&typeof r.data.name==='string')last.set(r.id,{...r.data,id:r.id})}
+  // Records edited while synchronization was running are protected by a follow-up sync.
+  const live=new Map(recipes.map(x=>[String(x.id),x]));
+  for(const [id,r] of live){if((Date.parse(r.updatedAt)||0)>(Date.parse(last.get(id)?.updatedAt)||0)&&(!tomb[id]||Date.parse(r.updatedAt)>Date.parse(tomb[id])))last.set(id,r)}
+  for(const [id,t] of Object.entries(deleted)){if(Date.parse(t)>(Date.parse(tomb[id])||0)){tomb[id]=t;last.delete(id)}}
+  recipes=[...last.values()];deleted=tomb;
+  localStorage.setItem(KEY,JSON.stringify(recipes));localStorage.setItem(DELETE_KEY,JSON.stringify(deleted));render();
+  cloudSay('✓ 클라우드 동기화 완료 · '+recipes.length+'개 레시피');showStatus('✓ 기기와 Supabase에 저장되었습니다.');
+ }catch(e){cloudSay('⚠ 동기화 실패: '+(e.message||String(e))+' · 기기 내 기록은 유지됩니다.');}
+ finally{syncBusy=false;if(syncAgain){syncAgain=false;scheduleSync()}}
+}
+function authUI(){const signed=!!user;$('email').hidden=signed;$('password').hidden=signed;$('login').hidden=signed;$('logout').hidden=!signed;if(signed)cloudSay('☁ 로그인됨 · '+user.email)}
+async function initCloud(){
+ if(!window.supabase){cloudSay('⚠ 클라우드 라이브러리를 불러오지 못했습니다. 인터넷을 확인해 주세요.');return}
+ try{client=window.supabase.createClient(CLOUD_URL,CLOUD_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const {data:{session}}=await client.auth.getSession();user=session?.user||null;authUI();if(user)await syncCloud();else cloudSay('로그인하면 기존 레시피를 유지하면서 클라우드와 합칩니다.');
+ client.auth.onAuthStateChange((event,session)=>{const prev=user?.id;user=session?.user||null;authUI();if(user&&prev!==user.id)setTimeout(syncCloud,0)});
+ }catch(e){cloudSay('⚠ 클라우드 연결 오류: '+e.message)}
+}
+$('login').onclick=async()=>{if(!client)return;const email=$('email').value.trim(),password=$('password').value;if(!email||!password){cloudSay('이메일과 비밀번호를 입력해 주세요.');return}cloudSay('로그인 중…');const {data,error}=await client.auth.signInWithPassword({email,password});if(error){cloudSay('⚠ 로그인 실패: '+error.message);return}user=data.user;authUI();await syncCloud()};
+$('logout').onclick=async()=>{if(!client)return;await client.auth.signOut();user=null;authUI();cloudSay('로그아웃됨 · 현재 기기에 저장된 기록은 유지됩니다.')};
+$('refresh').onclick=()=>syncCloud();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&user)syncCloud()});
+
+load();render();window.addEventListener('load',initCloud);
+})();
+</script></body></html>
